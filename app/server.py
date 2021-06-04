@@ -12,7 +12,7 @@ import asyncpg
 
 async def handle(request):
     conn = await asyncpg.connect(user='projector', password='123',
-                                 database='projector', host='172.17.0.2ы')
+                                 database='projector', host='172.17.0.2')
     values = await conn.fetch(
         'SELECT * FROM product'
     )
