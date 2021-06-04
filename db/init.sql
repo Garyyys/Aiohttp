@@ -1,0 +1,3 @@
+CREATE USER projector WITH PASSWORD '123';
+CREATE DATABASE projector WITH ENCODING 'utf-8';
+GRANT ALL PRIVILEGES ON DATABASE projector to projector;

@@ -1,0 +1,16 @@
+version: '3'
+services:
+  db:
+    build: ./db
+    environment:
+      - POSTGRES_PASSWORD=123
+    ports:
+      - '127.0.0.1:8081:5432'
+
+  app:
+    build: ./app
+    volumes:
+      - ./app:/app
+    ports:
+      - '127.0.0.1:8080:8080'
+
