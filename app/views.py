@@ -56,3 +56,19 @@ async def actors(request):
     }
 
     return web.json_response(data)
+
+
+@routes.post('/actors/add/')
+async def add_actors(request):
+    actors = []
+
+    async with request.app['pg_engine'].acquire() as conn:
+        data = await request.post()
+
+        await conn.execute(Actor.__table__.insert().values(
+            name=data['name'],
+            country=data['country'],
+            age=data['age'],
+        ))
+
+    return web.json_response({'status': 'ok'}, status=201)
