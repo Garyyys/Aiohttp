@@ -1,54 +1,33 @@
-# examples/server_simple.py
-import json
-import logging
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
 from aiohttp import web
-import asyncio
-import asyncpg
+from aiopg.sa import create_engine
+from dotenv import dotenv_values
+
+from views import routes
+
+config = dotenv_values("example.env")
 
 
-async def handle(request):
-    conn = await asyncpg.connect(user='projector', password='123',
-                                 database='projector', host='172.17.0.2')
-    values = await conn.fetch(
-        'SELECT * FROM product'
-    )
-    await conn.close()
-
-    list = []
-    for row in values:
-        list.append({
-            'id': row['product_id'],
-            'product': row['product'],
-        })
-
-    text = f' {list[0]}'
-
-    return web.Response(text=text)
+async def create_aiopg(app):
+    """
+    Creates database connection.
+    """
+    app['pg_engine'] = await create_engine(dsn=config['PG_DSN'])
 
 
-async def wshandle(request):
-    ws = web.WebSocketResponse()
-    await ws.prepare(request)
+async def dispose_aiopg(app):
+    """
+    Closes database connection.
+    """
+    app['pg_engine'].close()
+    await app['pg_engine'].wait_closed()
 
-    async for msg in ws:
-        if msg.type == web.WSMsgType.text:
-            await ws.send_str("Hello, {}".format(msg.data))
-        elif msg.type == web.WSMsgType.binary:
-            await ws.send_bytes(msg.data)
-        elif msg.type == web.WSMsgType.close:
-            break
-
-    return ws
-
-
-app = web.Application()
-app.add_routes([web.get('/', handle),
-                web.get('/echo', wshandle),
-                web.get('/{name}', handle)])
 
 if __name__ == '__main__':
-    web.run_app(app, port=8080)
+    app = web.Application()
+
+    app.on_startup.append(create_aiopg)
+    app.on_cleanup.append(dispose_aiopg)
+
+    app.add_routes(routes)
+
+    web.run_app(app, port=80)
