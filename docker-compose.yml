@@ -8,9 +8,8 @@ services:
       - '127.0.0.1:8081:5432'
 
   app:
+    depends_on:
+      - db
     build: ./app
-    volumes:
-      - ./app:/app
     ports:
-      - '127.0.0.1:8080:8080'
-
+      - '127.0.0.1:8080:80'
